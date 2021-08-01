@@ -1,11 +1,13 @@
-package com.battleq.member.vo.entity;
+package com.battleq.member.domain.entity;
 
-import com.battleq.member.vo.dto.MemberDTO;
+import com.battleq.member.domain.dto.MemberDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -15,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "BATTLE_MEMBER")
+@Table(name = "battle_member")
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,17 +43,26 @@ public class Member {
     private Long profileImg;
     @Column
     private String userInfo;
+    @Enumerated(EnumType.STRING)
+    @Column
+    private Authority authority;
+
+
 
     public void updateEmailAuth(EmailAuth auth) {
         this.emailAuth = auth;
     }
 
-    public void updateMemberInfo(MemberDTO dto) {
+    public void updateMemberInfo(MemberDto dto) {
         this.userName = dto.getUserName();
         this.pwd = dto.getPwd();
         this.modDate = LocalDateTime.now();
         this.nickname = dto.getNickname();
         this.userInfo = dto.getUserInfo();
+    }
+
+    public GrantedAuthority getConvertAuthority() {
+        return new SimpleGrantedAuthority(this.authority.toString());
     }
 }
 

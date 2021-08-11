@@ -9,11 +9,16 @@ import com.battleq.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +28,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final StringRedisTemplate redisTemplate;
 
     /**
      * 회원가입
@@ -60,35 +66,64 @@ public class MemberService {
      * 회원 정보 수정
      */
     public String modifyMemberInfo(MemberDto dto) throws Exception {
-        Member member = memberRepository.findMemberByEmail(dto.getEmail())
-                .orElseThrow(() -> new Exception("해당 유저가 존재하지 않습니다."));
-        member.updateMemberInfo(dto);
-        return memberRepository.save(member).getEmail();
+        Optional<Member> result = memberRepository.findMemberByEmail(dto.getEmail());
+        if (result.isPresent()) {
+            Member member = result.get();
+            if (dto.getPwd() != null && !dto.getPwd().equals("")) {
+                dto.updateEncodePassword(passwordEncoder.encode(dto.getPwd()));
+            }
+            member.updateMemberInfo(dto);
+            return memberRepository.save(member).getEmail();
+        } else {
+            return null;
+        }
     }
+
     /**
      * 로그인
      */
     public String validateLogin(MemberDto dto) throws Exception {
-        Member member = memberRepository.findMemberByEmail(dto.getEmail())
-                .orElseThrow(() -> new Exception("해당 e-mail이 존재하지 않습니다."));
-        if (!passwordEncoder.matches(dto.getPwd(), member.getPwd())) {
-            throw new Exception("비밀번호가 다릅니다.");
+        Optional<Member> result = memberRepository.findMemberByEmail(dto.getEmail());
+        if (result.isPresent()) {
+            Member member = result.get();
+            if (!passwordEncoder.matches(dto.getPwd(), member.getPwd())) {
+                return null;
+            }
+            String accessToken = jwtTokenProvider.createToken(member.getEmail(), Arrays.asList(member.getConvertAuthority()));
+            return accessToken;
+        } else {
+            return null;
         }
-        return jwtTokenProvider.createToken(member.getEmail(),Arrays.asList(member.getConvertAuthority()));
     }
 
     /**
-     *  유저 상세 보기
+     * 유저 상세 보기
      */
     public MemberDto getMemberDetail(String email) throws Exception {
-        Member member = memberRepository.findMemberByEmail(email)
-                .orElseThrow(() -> new Exception("해당 유저가 존재하지 않습니다."));
-        return MemberDto.builder()
-                .userName(member.getUserName())
-                .email(member.getEmail())
-                .nickname(member.getNickname())
-                .userInfo(member.getUserInfo())
-                .authority(member.getAuthority())
-                .build();
+        Optional<Member> result = memberRepository.findMemberByEmail(email);
+        if (result.isPresent()) {
+            Member member = result.get();
+            return MemberDto.builder()
+                    .userName(member.getUserName())
+                    .email(member.getEmail())
+                    .nickname(member.getNickname())
+                    .userInfo(member.getUserInfo())
+                    .authority(member.getAuthority())
+                    .build();
+        } else {
+            return null;
+        }
     }
+
+    /**
+     * 로그아웃
+     */
+    public boolean doLogout(String token) throws Exception {
+        ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+        Date accessTokenExpireDate = jwtTokenProvider.getExpireDate(token);
+        valueOperations.set(token, token, accessTokenExpireDate.getTime() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+        SecurityContextHolder.clearContext();
+        return true;
+    }
+
 }

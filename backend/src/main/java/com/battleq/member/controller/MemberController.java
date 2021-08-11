@@ -16,14 +16,16 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final MemberService memberService;
+
     /**
-     *  회원가입
+     * 회원가입
      */
     @PostMapping("/member/regist")
     public ResponseEntity<String> registMember(@RequestBody MemberDto dto) throws Exception {
         String registEmail = memberService.registMember(dto);
-        return new ResponseEntity<String>(registEmail,HttpStatus.CREATED);
+        return new ResponseEntity<String>(registEmail, HttpStatus.CREATED);
     }
+
     /**
      * 가입 가능한 E-MAIL 확인
      */
@@ -32,8 +34,7 @@ public class MemberController {
         Boolean isAvailableEmail = memberService.validateAvailableEmail(email);
         if (isAvailableEmail) {
             return new ResponseEntity(HttpStatus.OK); // 200
-        }
-        else {
+        } else {
             return new ResponseEntity(HttpStatus.CONFLICT); // 409
         }
     }
@@ -46,8 +47,7 @@ public class MemberController {
         Boolean isAvailableNickName = memberService.validateAvailableNickName(nickName);
         if (isAvailableNickName) {
             return new ResponseEntity(HttpStatus.OK); // 200
-        }
-        else {
+        } else {
             return new ResponseEntity(HttpStatus.CONFLICT); // 409
         }
     }
@@ -58,22 +58,50 @@ public class MemberController {
     @PutMapping("/member/modify")
     public ResponseEntity<String> modifyMemberInfo(@RequestBody MemberDto dto) throws Exception {
         String email = memberService.modifyMemberInfo(dto);
-        return new ResponseEntity<String>(email,HttpStatus.OK);
+        if (email != null) {
+            return new ResponseEntity<String>(email, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
     }
+
     /**
      * 로그인
      */
     @PostMapping("/member/login")
     public ResponseEntity<String> doLogin(@RequestBody MemberDto dto) throws Exception {
         String token = memberService.validateLogin(dto);
-        return new ResponseEntity<String>(token,HttpStatus.OK);
+        if (token != null) {
+            return new ResponseEntity<String>(token, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
     }
+
     /**
      * 유저 상세보기
      */
     @GetMapping("/member/detail/{email}")
-    public ResponseEntity<MemberDto> getMemberDetail(@PathVariable("email")String email) throws Exception {
+    public ResponseEntity<MemberDto> getMemberDetail(@PathVariable("email") String email) throws Exception {
         MemberDto memberDetail = memberService.getMemberDetail(email);
-        return new ResponseEntity<MemberDto>(memberDetail,HttpStatus.OK);
+        if (memberDetail != null) {
+            return new ResponseEntity<MemberDto>(memberDetail, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
     }
+
+    /**
+     * 로그아웃
+     */
+    @PostMapping("/member/logout")
+    public ResponseEntity<Boolean> doLogout(@RequestHeader("accessToken") String token) throws Exception {
+        Boolean isLogout = memberService.doLogout(token);
+        if (isLogout) {
+            return new ResponseEntity<Boolean>(true, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<Boolean>(false, HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }

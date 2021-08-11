@@ -3,6 +3,7 @@ package com.battleq.member.controller;
 import com.battleq.member.domain.dto.MemberDto;
 import com.battleq.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

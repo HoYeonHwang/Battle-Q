@@ -1,8 +1,13 @@
 package com.battleq.quizItem.controller;
 
-import com.battleq.quiz.controller.QuizApiController;
-import com.battleq.quiz.domain.Quiz;
-import com.battleq.quizItem.domain.QuizItem;
+import com.battleq.quizItem.domain.dto.QuizItemDto;
+import com.battleq.quizItem.domain.dto.request.CreateQuizItemRequest;
+import com.battleq.quizItem.domain.dto.request.UpdateQuizItemRequest;
+import com.battleq.quizItem.domain.dto.response.CreateQuizItemResponse;
+import com.battleq.quizItem.domain.dto.response.QuizItemListResponse;
+import com.battleq.quizItem.domain.dto.response.QuizItemResponse;
+import com.battleq.quizItem.domain.dto.response.UpdateQuizItemResponse;
+import com.battleq.quizItem.domain.entity.QuizItem;
 import com.battleq.quizItem.domain.QuizType;
 import com.battleq.quizItem.service.QuizItemService;
 import lombok.AllArgsConstructor;
@@ -55,7 +60,7 @@ public class QuizItemApiController {
     }
 
     @PutMapping("api/v1/quizItem/{quizItemId}")
-    public UpdateQuizItemResponse updateQuizItemFormV1(@PathVariable("quizItemId") Long quizItemId,@RequestBody @Valid UpdateQuizItemRequest request){
+    public UpdateQuizItemResponse updateQuizItemFormV1(@PathVariable("quizItemId") Long quizItemId, @RequestBody @Valid UpdateQuizItemRequest request){
         //고민중
         QuizItem quizItem = new QuizItem();
         quizItem.setTitle(request.getTitle());
@@ -71,82 +76,13 @@ public class QuizItemApiController {
         return new UpdateQuizItemResponse(findQuizItem.getId(), findQuizItem.getTitle());
     }
 
-    @Data
-    @AllArgsConstructor
-    static class QuizItemResponse<T>{
-        private String status;
-        private T data;
-        private String message;
-    }
-    @Data
-    @AllArgsConstructor
-    static class QuizItemListResponse<T> {
-        private String status;
-        private T data;
-        private String message;
-    }
 
-    @Data
-    static class CreateQuizItemResponse{
-        private Long id;
 
-        public CreateQuizItemResponse(Long id ){
-            this.id = id;
-        }
-    }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    static class QuizItemDto {
-        private String title;
-        private String content;
-        private String image;
-        private QuizType type;
-        private String limitTime;
-        private String point;
-        private String pointType;
 
-        public QuizItemDto createQuizItemDto(QuizItem quizItem) {
-            this.title = quizItem.getTitle();
-            this.content = quizItem.getContent();
-            this.image = quizItem.getImage();
-            this.type = quizItem.getType();
-            this.limitTime = quizItem.getLimitTime();
-            this.point = quizItem.getPoint();
-            this.pointType = quizItem.getPointType();
 
-            return this;
-        }
-    }
 
-    @Data
-    static class CreateQuizItemRequest{
-        @NotEmpty
-        private String title;
-        private String content;
-        private String image;
-        private QuizType type;
-        private String limitTime;
-        private String point;
-        private String pointType;
-    }
 
-    @Data
-    static class UpdateQuizItemRequest{
-        @NotEmpty
-        private String title;
-        private String content;
-        private String image;
-        private QuizType type;
-        private String limitTime;
-        private String point;
-        private String pointType;
-    }
-    @Data
-    @AllArgsConstructor
-    static class UpdateQuizItemResponse{
-        private Long id;
-        private String name;
-    }
+
+
 }

@@ -1,7 +1,7 @@
 package com.battleq.quizItem.service;
 
 import com.battleq.quiz.repository.QuizRepository;
-import com.battleq.quizItem.domain.QuizItem;
+import com.battleq.quizItem.domain.entity.QuizItem;
 import com.battleq.quizItem.repository.QuizItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

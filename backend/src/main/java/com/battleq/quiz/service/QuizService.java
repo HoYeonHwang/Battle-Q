@@ -1,6 +1,9 @@
 package com.battleq.quiz.service;
 
-import com.battleq.quiz.domain.Quiz;
+import com.battleq.member.domain.entity.Member;
+import com.battleq.member.repository.MemberRepository;
+import com.battleq.quiz.domain.dto.QuizDto;
+import com.battleq.quiz.domain.entity.Quiz;
 import com.battleq.quiz.repository.QuizRepository;
 import com.battleq.quizItem.repository.QuizItemRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,36 +20,33 @@ public class QuizService {
 
     private final QuizRepository quizRepository;
     private final QuizItemRepository quizItemRepository;
+    private final MemberRepository memberRepository;
 
-    /**
-     * 생성
-     */
     @Transactional
-    public Long saveQuiz(Quiz quizRequest){
+    public Long saveQuiz(QuizDto quizRequest) {
 
-        Quiz quiz = Quiz.initQuiz(quizRequest.getName(),quizRequest.getThumbnail(),quizRequest.getIntroduction(), quizRequest.getCategory());
+        Member member = memberRepository.findOne(quizRequest.getMemberId());
 
-        // 퀴즈 저장
+        Quiz quiz = Quiz.initQuiz(quizRequest.getName(), quizRequest.getThumbnail(), quizRequest.getIntroduction(), quizRequest.getCategory());
+
         quizRepository.save(quiz);
         return quiz.getId();
     }
-    /**
-     * 수정
-     */
+
     @Transactional
-    public void update(Long id, Quiz quizRequest){
-        //영속 상태
+    public void update(Long id, Quiz quizRequest) {
         Quiz quiz = quizRepository.findOne(id);
         quiz.setName(quizRequest.getName());
         quiz.setCategory(quizRequest.getCategory());
         quiz.setThumbnail(quizRequest.getThumbnail());
         quiz.setIntroduction(quizRequest.getIntroduction());
     }
-    public Quiz findOne(Long quizId){
+
+    public Quiz findOne(Long quizId) {
         return quizRepository.findOne(quizId);
     }
 
-    public List<Quiz> findAllQuiz(){
-        return quizRepository.findAll();
+    public List<Quiz> findAllQuiz(int offset, int limit) {
+        return quizRepository.findAllWithMemberItem(offset, limit);
     }
 }

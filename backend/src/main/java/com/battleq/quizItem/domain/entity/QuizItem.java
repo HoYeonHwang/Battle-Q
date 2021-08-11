@@ -1,6 +1,8 @@
-package com.battleq.quizItem.domain;
+package com.battleq.quizItem.domain.entity;
 
-import com.battleq.quiz.domain.Quiz;
+import com.battleq.quiz.domain.entity.Quiz;
+import com.battleq.quizItem.domain.QuizType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,11 +14,11 @@ import javax.persistence.*;
 public class QuizItem {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "quizItem_id")
     private Long id;
 
-
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiz_id")
     private Quiz quiz;

@@ -1,11 +1,22 @@
 package com.battleq.quiz.controller;
 
-import com.battleq.quiz.domain.Quiz;
+import com.battleq.quiz.domain.dto.QuizDto;
+import com.battleq.quiz.domain.dto.QuizMapper;
+import com.battleq.quiz.domain.dto.request.CreateQuizRequest;
+import com.battleq.quiz.domain.dto.request.UpdateQuizRequest;
+import com.battleq.quiz.domain.dto.response.CreateQuizResponse;
+import com.battleq.quiz.domain.dto.response.QuizListResponse;
+
+import com.battleq.quiz.domain.dto.response.QuizResponse;
+import com.battleq.quiz.domain.dto.response.UpdateQuizResponse;
+import com.battleq.quiz.domain.entity.Quiz;
 import com.battleq.quiz.service.QuizService;
+import com.battleq.quizItem.domain.entity.QuizItem;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -20,35 +31,30 @@ public class QuizApiController {
     private final QuizService quizService;
 
     @GetMapping("api/v1/quiz")
-    public QuizListResponse findAllQuizV1(){
+    public QuizListResponse findAllQuizV1(
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "limit", defaultValue = "10") int limit){
 
-        List<QuizDto> resultQuizzes = quizService.findAllQuiz().stream()
-                .map(m -> new QuizDto(m.getName(), m.getCategory(), m.getThumbnail(),m.getIntroduction()))
+        List<QuizDto> resultQuizzes = quizService.findAllQuiz(offset, limit).stream()
+                .map(m -> new QuizDto(m))
                 .collect(Collectors.toList());
 
-        return new QuizListResponse("STATUS OK", resultQuizzes,"퀴즈 전체 검색");
+        return new QuizListResponse(HttpStatus.OK, resultQuizzes,"퀴즈 전체 검색");
     }
 
     @GetMapping("api/v1/quiz/{quizId}")
     public QuizResponse findOneQuizV1(@PathVariable("quizId") Long quizId){
 
-        QuizDto quizDto = new QuizDto().createQuizDto(quizService.findOne(quizId));
+        QuizDto quizDto = new QuizDto(quizService.findOne(quizId));
 
-        return new QuizResponse("STATUS OK", quizDto,"퀴즈 단일 검색");
+        return new QuizResponse(HttpStatus.OK, quizDto,"퀴즈 단일 검색");
     }
     @PostMapping("api/v1/quiz")
     public CreateQuizResponse saveQuizV1(@RequestBody @Valid CreateQuizRequest request){
 
+        QuizDto dto = QuizMapper.INSTANCE.createQuizRequestToDto(request);
 
-        // 고민중
-        Quiz quiz = new Quiz();
-        quiz.setName(request.getName());
-        quiz.setCategory(request.getCategory());
-        quiz.setIntroduction(request.getIntroduction());
-        quiz.setThumbnail(request.getThumbnail());
-
-
-        Long id = quizService.saveQuiz(quiz);
+        Long id = quizService.saveQuiz(dto);
         return new CreateQuizResponse(id);
     }
 
@@ -66,70 +72,4 @@ public class QuizApiController {
         return new UpdateQuizResponse(findQuiz.getId(), findQuiz.getName());
     }
 
-    @Data
-    static class CreateQuizRequest{
-        @NotEmpty
-        private String name;
-        private String category;
-        private String thumbnail;
-        private String introduction;
-    }
-    @Data
-    static class CreateQuizResponse{
-        private Long id;
-
-        public CreateQuizResponse(Long id){
-            this.id = id;
-        }
-    }
-
-    @Data
-    static  class UpdateQuizRequest{
-        @NotEmpty
-        private String name;
-        private String category;
-        private String thumbnail;
-        private String introduction;
-    }
-    @Data
-    @AllArgsConstructor
-    static class UpdateQuizResponse{
-        private Long id;
-        private String name;
-    }
-
-    @Data
-    @AllArgsConstructor
-    static class QuizResponse<T>{
-        private String status;
-        private T data;
-        private String message;
-    }
-
-    @Data
-    @AllArgsConstructor
-    static class QuizListResponse<T>{
-        private String status;
-        private T data;
-        private String message;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    static class QuizDto {
-        private String name;
-        private String category;
-        private String thumbnail;
-        private String introduction;
-
-        public QuizDto createQuizDto(Quiz quiz){
-            this.name = quiz.getName();
-            this.category = quiz.getCategory();
-            this.thumbnail = quiz.getThumbnail();
-            this.introduction = quiz.getIntroduction();
-
-            return this;
-        }
-    }
 }

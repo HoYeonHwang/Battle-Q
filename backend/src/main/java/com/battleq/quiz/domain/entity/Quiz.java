@@ -1,8 +1,8 @@
-package com.battleq.quiz.domain;
+package com.battleq.quiz.domain.entity;
 
-import com.battleq.quiz.controller.QuizApiController;
-import com.battleq.quizItem.domain.QuizItem;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.battleq.member.domain.entity.Member;
+import com.battleq.quizItem.domain.entity.QuizItem;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +11,8 @@ import javax.validation.constraints.NotEmpty;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static javax.persistence.FetchType.LAZY;
 
 /**
  * id : 식별자
@@ -22,38 +24,42 @@ import java.util.List;
  * view : 미션 조회수
  */
 @Entity
-@Getter @Setter
+@Getter
+@Builder
 @Table(name = "quizs")
 public class Quiz {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "quiz_id")
     private Long id;
 
     @NotEmpty
     private String name;
 
-    //@JsonIgnore
+    @OneToOne(fetch = LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
+
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL)
     private List<QuizItem> quizItems = new ArrayList<>();
 
     private String category;
     private String thumbnail;
     private String introduction;
-    private LocalDateTime quizDate;
+    private LocalDateTime creationDate;
     private int view;
 
     //private int level;
 
-
-    /**
-     * 퀴즈 아이템 연관관계
-      */
     public void addQuizItem(QuizItem quizItem){
         quizItems.add(quizItem);
         quizItem.setQuiz(this);
     }
 
+    public void setMember(Member member){
+        this.member = member;
+        member.setQuiz(this);
+    }
     /**
      * 초기 퀴즈 셋팅
      * @param name
@@ -79,15 +85,6 @@ public class Quiz {
 
     }*/
 
-
-    /**
-     * 멤버 , 좋아요 추가
-     */
-
-
-    /**
-     * 조회수 증가
-     */
     public void addView(){
         this.view++;
     }

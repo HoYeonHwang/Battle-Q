@@ -1,8 +1,14 @@
 package com.battleq.quiz.repository;
 
-import com.battleq.quiz.domain.Quiz;
+import com.battleq.member.domain.entity.QMember;
+import com.battleq.quiz.domain.dto.QuizDto;
+import com.battleq.quiz.domain.entity.QQuiz;
+import com.battleq.quiz.domain.entity.Quiz;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -13,10 +19,6 @@ public class QuizRepository {
 
     private final EntityManager em;
 
-    /**
-     * 병합 변경해야합니다.
-     * @param quiz
-     */
     public void save(Quiz quiz){
         if(quiz.getId() == null){
             em.persist(quiz);
@@ -30,7 +32,43 @@ public class QuizRepository {
     }
 
     public List<Quiz> findAll() {
-        return em.createQuery("select q from Quiz q",Quiz.class)
-                .getResultList();
+        QQuiz quiz = QQuiz.quiz;
+        QMember member = QMember.member;
+
+        JPAQueryFactory query = new JPAQueryFactory(em);
+
+        return query
+                .select(quiz)
+                .from(quiz)
+                .join(quiz.member,member)
+                .where(nameLike("황호연"))
+                .limit(1000)
+                .fetch();
+
+        /*return em.createQuery("select q from Quiz q",Quiz.class)
+                .getResultList();*/
+    }
+    private BooleanExpression nameLike(String userName){
+        if(!StringUtils.hasText(userName)){
+            return null;
+        }
+        return QMember.member.userName.like(userName);
+    }
+    public List<Quiz> findAllWithItem(){
+        return em.createQuery(
+                "select distinct q from Quiz q"+
+                        " join fetch q.quizItems i"+
+                        " join fetch i.quiz qu ", Quiz.class).getResultList();
+    }
+    public List<Quiz> findAllWithMemberItem(int offset, int limit){
+        return em.createQuery(
+                "select distinct q from Quiz q"+
+                        " join fetch q.member m" ,Quiz.class).setFirstResult(offset).setMaxResults(limit).getResultList();
+    }
+
+    public List<Quiz> findAllWithMemberItem(){
+        return em.createQuery(
+                "select distinct q from Quiz q"+
+                        " join fetch q.member m" ,Quiz.class).getResultList();
     }
 }

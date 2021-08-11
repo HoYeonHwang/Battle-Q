@@ -1,12 +1,10 @@
 package com.battleq.quizItem.repository;
 
-import com.battleq.quiz.domain.Quiz;
-import com.battleq.quizItem.domain.QuizItem;
+import com.battleq.quizItem.domain.entity.QuizItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import java.util.List;
 
 @Repository
